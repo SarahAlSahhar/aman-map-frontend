@@ -1,0 +1,304 @@
+.custom-navbar {
+    background: #2E4E7A !important;
+    direction: rtl;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1050 !important;
+    box-shadow: 0 4px 20px rgba(68, 114, 167, 0.3) !important;
+    height: 65px;
+    transition: all 0.3s ease;
+}
+
+.custom-navbar:hover {
+    box-shadow: 0 6px 25px rgba(68, 114, 167, 0.4) !important;
+}
+
+.navbar-brand {
+    color: white !important;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: all 0.3s ease;
+}
+
+.navbar-brand:hover {
+    color: #e8f4fd !important;
+    transform: scale(1.02);
+}
+
+.brand-logo {
+    transition: transform 0.3s ease;
+}
+
+.brand-logo:hover {
+    transform: rotate(10deg) scale(1.1);
+}
+
+.nav-link-about {
+    color: white !important;
+    font-weight: 500;
+    padding: 10px 20px !important;
+    border-radius: 25px;
+    background: rgba(255, 255, 255, 0.15);
+    transition: all 0.3s ease;
+    text-decoration: none;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.nav-link-about:hover {
+    background: rgba(255, 255, 255, 0.25);
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.navbar-toggler {
+    border-color: rgba(255, 255, 255, 0.4) !important;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+}
+
+.navbar-toggler:hover {
+    border-color: rgba(255, 255, 255, 0.6) !important;
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+}
+
+
+.mobile-menu {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    margin-top: 10px;
+    padding: 15px;
+}
+
+@media (max-width: 768px) {
+    .nav-link-about {
+        width: 100%;
+        text-align: center;
+        margin: 5px 0;
+    }
+}
+
+
+
+/* the style of the popup */
+.verified-badge {
+    background: #22c55e;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.popup-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 15px;
+    justify-content: center;
+}
+
+.popup-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 60px;
+}
+
+.popup-btn.verify {
+    background: #22c55e;
+    color: white;
+}
+
+.popup-btn.report {
+    background: #f59e0b;
+    color: white;
+}
+
+.popup-btn.remove {
+    background: #dc2626;
+    color: white;
+}
+
+.popup-btn:hover {
+    transform: translateY(-1px);
+    opacity: 0.9;
+}
+
+
+
+
+
+
+
+
+
+.popup-btn.end {
+    background: #16a34a;
+    color: white;
+}
+
+.popup-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.action-descriptions {
+    margin-top: 10px;
+    padding: 8px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+}
+
+.action-descriptions small {
+    color: #6c757d;
+    line-height: 1.4;
+}
+
+.custom-popup .popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    direction: rtl;
+}
+
+.verified-badge {
+    background: #22c55e;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+}
+
+.popup-details {
+    margin: 10px 0;
+    direction: rtl;
+}
+
+.popup-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 15px 0;
+}
+
+.popup-btn {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 15px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.popup-btn.verify {
+    background: #22c55e;
+    color: white;
+}
+
+.popup-btn.report {
+    background: #f59e0b;
+    color: white;
+}
+
+.popup-btn.end {
+    background: #dc2626;
+    color: white;
+}
+
+.popup-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.time-info {
+    background: #f8f9fa;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin: 8px 0;
+    font-size: 13px;
+    color: #6c757d;
+    border-left: 3px solid #dee2e6;
+}
+
+.action-descriptions {
+    margin-top: 10px;
+    padding: 8px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    font-size: 11px;
+    direction: rtl;
+}
+
+
+
+/* Modern Toast Styles */
+.modern-toast.toast-enter {
+    transform: translateX(0) !important;
+    opacity: 1 !important;
+}
+
+.modern-toast.toast-exit {
+    transform: translateX(-120%) !important;
+    opacity: 0 !important;
+}
+
+/* Progress Bar Animation */
+@keyframes progress {
+    from {
+        width: 100%;
+    }
+
+    to {
+        width: 0%;
+    }
+}
+
+/* Toast Container */
+.toast-container {
+    position: fixed;
+    top: 100px;
+    left: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+    max-width: 400px;
+}
+
+.toast-container .modern-toast {
+    pointer-events: auto;
+}
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
+    .toast-container {
+        left: 15px;
+        right: 15px;
+        max-width: none;
+        top: 80px;
+    }
+
+    .modern-toast {
+        min-width: auto !important;
+        max-width: none !important;
+    }
+}
+
+/* Hover effect for entire toast */
+.modern-toast:hover {
+    transform: translateX(0) scale(1.02) !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2) !important;
+}
