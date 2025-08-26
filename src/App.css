@@ -136,11 +136,6 @@
 
 
 
-
-
-
-
-
 .popup-btn.end {
     background: #16a34a;
     color: white;
@@ -242,8 +237,6 @@
 }
 
 
-
-/* Modern Toast Styles */
 .modern-toast.toast-enter {
     transform: translateX(0) !important;
     opacity: 1 !important;
@@ -254,7 +247,6 @@
     opacity: 0 !important;
 }
 
-/* Progress Bar Animation */
 @keyframes progress {
     from {
         width: 100%;
@@ -297,7 +289,6 @@
     }
 }
 
-/* Hover effect for entire toast */
 .modern-toast:hover {
     transform: translateX(0) scale(1.02) !important;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2) !important;

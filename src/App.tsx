@@ -4,9 +4,9 @@ import 'bootstrap/dist/css/bootstrap.css';
 import imagePath from './assets/location-pin.png';
 import './App.css';
 import type { DANGER_ZONE } from "./types";
-import {  REQUIRED_VERIFICATIONS } from "./types";
-import { useState,useCallback } from 'react';
-import {getSessionId } from './utils/index';
+import { REQUIRED_VERIFICATIONS } from "./types";
+import { useState, useCallback } from 'react';
+import { getSessionId, generateId } from './utils/index';
 import { canPerformAction } from './utils/verification';
 import Toast from './components/Toast';
 import 'react-toastify/dist/ReactToastify.css';
@@ -22,7 +22,6 @@ function App() {
   // تغيير إلى array بدل object واحد
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
-  // دالة إظهار Toast مصححة
   const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning') => {
     const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const newToast: ToastMessage = { id, message, type };
@@ -67,62 +66,80 @@ function App() {
     }
   ]);
 
-  const handleAction = useCallback((zoneId: string, actionType: 'document' | 'report' | 'end') => {
-  const sessionId = getSessionId();
-
-  setZones(prev => prev.map(zone => {
-    if (zone.id !== zoneId) return zone;
-
-    const verification = canPerformAction(
-      actionType === 'document' ? zone.verificationsByUsers :
-      actionType === 'report' ? zone.reportedByUsers : zone.endRequests,
-      sessionId,
-      actionType
-    );
-
+  // دالة إضافة منطقة خطر جديدة
+  const handleAddZone = useCallback((newZoneData: Omit<DANGER_ZONE, 'id'>) => {
+    const verification = canPerformAction([], getSessionId(), 'add');
+    
     if (!verification.canPerform) {
-      showToast(verification.reason || 'لا يمكن تنفيذ هذا الإجراء', 'error');
-      return zone;
+      showToast(verification.reason || 'لا يمكن إضافة منطقة خطر', 'error');
+      return;
     }
 
-    const updatedZone = { ...zone };
+    const newZone: DANGER_ZONE = {
+      ...newZoneData,
+      id: generateId()
+    };
 
-    if (actionType === 'document') {
-      updatedZone.verificationsByUsers = [...zone.verificationsByUsers, sessionId];
-      if (updatedZone.verificationsByUsers.length >= REQUIRED_VERIFICATIONS) {
-        updatedZone.isVerified = true;
-        showToast(`تم توثيق المنطقة "${zone.area}" بنجاح!`, 'success'); // أخضر
-      } else {
-        showToast(`تم إضافة تأكيدك (${updatedZone.verificationsByUsers.length}/${REQUIRED_VERIFICATIONS})`, 'info'); // أزرق
-      }
-    } else if (actionType === 'report') {
-      updatedZone.reportedByUsers = [...zone.reportedByUsers, sessionId];
-      if (updatedZone.reportedByUsers.length >= REQUIRED_VERIFICATIONS) {
-        updatedZone.zoneStatus = 'false_report';
-        showToast('تم الإبلاغ عن المنطقة وستتم إزالتها', 'warning'); // أصفر للبلاغ
-      } else {
-        showToast(`تم إضافة بلاغك (${updatedZone.reportedByUsers.length}/${REQUIRED_VERIFICATIONS})`, 'warning'); // أصفر للبلاغ
-      }
-    } else if (actionType === 'end') {
-      updatedZone.endRequests = [...zone.endRequests, sessionId];
-      if (updatedZone.endRequests.length >= REQUIRED_VERIFICATIONS) {
-        updatedZone.zoneStatus = 'removed';
-        showToast(`تم تأكيد انتهاء الخطر في "${zone.area}"`, 'error'); // أحمر لانتهاء الخطر
-      } else {
-        showToast(`تم طلب انتهاء الخطر (${updatedZone.endRequests.length}/${REQUIRED_VERIFICATIONS})`, 'error'); // أحمر لانتهاء الخطر
-      }
-    }
+    setZones(prev => [...prev, newZone]);
+    showToast('تم إضافة منطقة الخطر بنجاح!', 'success');
+  }, []);
 
-    return updatedZone;
-  }).filter(zone => zone.zoneStatus !== 'false_report' && zone.zoneStatus !== 'removed'));
-}, []);
+  const handleAction = useCallback((zoneId: string, actionType: 'document' | 'report' | 'end') => {
+    const sessionId = getSessionId();
+
+    setZones(prev => prev.map(zone => {
+      if (zone.id !== zoneId) return zone;
+
+      const verification = canPerformAction(
+        actionType === 'document' ? zone.verificationsByUsers :
+        actionType === 'report' ? zone.reportedByUsers : zone.endRequests,
+        sessionId,
+        actionType
+      );
+
+      if (!verification.canPerform) {
+        showToast(verification.reason || 'لا يمكن تنفيذ هذا الإجراء', 'error');
+        return zone;
+      }
+
+      const updatedZone = { ...zone };
+
+      if (actionType === 'document') {
+        updatedZone.verificationsByUsers = [...zone.verificationsByUsers, sessionId];
+        if (updatedZone.verificationsByUsers.length >= REQUIRED_VERIFICATIONS) {
+          updatedZone.isVerified = true;
+          showToast(`تم توثيق المنطقة "${zone.area}" بنجاح! `, 'success');
+        } else {
+          showToast(`تم إضافة تأكيدك (${updatedZone.verificationsByUsers.length}/${REQUIRED_VERIFICATIONS})`, 'info');
+        }
+      } else if (actionType === 'report') {
+        updatedZone.reportedByUsers = [...zone.reportedByUsers, sessionId];
+        if (updatedZone.reportedByUsers.length >= REQUIRED_VERIFICATIONS) {
+          updatedZone.zoneStatus = 'false_report';
+          showToast('تم الإبلاغ عن المنطقة وستتم إزالتها ', 'warning');
+        } else {
+          showToast(`تم إضافة بلاغك (${updatedZone.reportedByUsers.length}/${REQUIRED_VERIFICATIONS})`, 'warning');
+        }
+      } else if (actionType === 'end') {
+        updatedZone.endRequests = [...zone.endRequests, sessionId];
+        if (updatedZone.endRequests.length >= REQUIRED_VERIFICATIONS) {
+          updatedZone.zoneStatus = 'removed';
+          showToast(`تم تأكيد انتهاء الخطر في "${zone.area}"`, 'info');
+        } else {
+          showToast(`تم طلب انتهاء الخطر (${updatedZone.endRequests.length}/${REQUIRED_VERIFICATIONS})`, 'info');
+        }
+      }
+
+      return updatedZone;
+    }).filter(zone => zone.zoneStatus !== 'false_report' && zone.zoneStatus !== 'removed'));
+  }, []);
 
   const handleRefresh = () => {
-    showToast('تم تحديث البيانات', 'info');
+    showToast('تم تحديث البيانات ', 'info');
   };
 
   const handleTogglePanel = () => {
-    showToast('فتح لوحة البيانات', 'info');
+    showToast('فتح لوحة البيانات ', 'info');
   };
 
   return (
@@ -133,9 +150,13 @@ function App() {
         onRefresh={handleRefresh}
         onTogglePanel={handleTogglePanel} 
       />
-      <MapComponent zones={zones} onAction={handleAction} />
+      <MapComponent 
+        zones={zones} 
+        onAction={handleAction}
+        onAddZone={handleAddZone}
+        onShowToast={showToast}
+      />
 
-      {/* عرض Multiple Toasts */}
       <div className="toast-container">
         {toasts.map((toast) => (
           <Toast
@@ -146,7 +167,7 @@ function App() {
           />
         ))}
       </div>
-    </div>
+        </div>
   );
 }
 

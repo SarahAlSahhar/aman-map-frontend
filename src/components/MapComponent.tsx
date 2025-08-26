@@ -1,67 +1,107 @@
-import { MapContainer, TileLayer, Marker, Popup, Circle } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Circle, useMapEvents } from "react-leaflet";
 import { Icon, DivIcon, point } from "leaflet";
 import 'leaflet/dist/leaflet.css';
-// import markerIcon from '../assets/marker.png';
 import MarkerClusterGroup from 'react-leaflet-cluster';
-import { DANGER_COLORS } from "../types";
+import { DANGER_COLORS, REPORT_TYPE_LABELS } from "../types";
 import type { DANGER_ZONE } from "../types";
 import { ACTION_LABELS, REQUIRED_VERIFICATIONS, DEFAULT_ZONE_RADIUS } from "../types";
 import { getSessionId } from "../utils";
 import { canPerformAction } from "../utils/verification";
 import { timeAgo } from "../utils";
+import { useState, useCallback } from "react";
+import ReportForm from "./ReportForm";
 
 
 interface MapComponentProps {
     zones: DANGER_ZONE[];
     onAction: (zoneId: string, actionType: 'document' | 'report' | 'end') => void;
+    onAddZone: (zone: Omit<DANGER_ZONE, 'id'>) => void;
+    onShowToast: (message: string, type: 'success' | 'error' | 'info' | 'warning') => void;
 }
 
-const MapComponent: React.FC<MapComponentProps> = ({ zones, onAction }) => {
+const MapEventHandler = ({ onMapClick, onOutsideGazaClick }: { 
+    onMapClick: (lat: number, lng: number) => void;
+    onOutsideGazaClick: () => void;
+}) => {
+    const map = useMapEvents({
+        click: (e) => {
+            console.log('تم النقر على الخريطة!', e.latlng); 
+            const { lat, lng } = e.latlng;
+            
+            // التحقق من أن النقرة داخل حدود غزة
+            if (lat >= 31.22 && lat <= 31.59 && lng >= 34.26 && lng <= 34.55) {
+                console.log('النقرة داخل غزة:', lat, lng);
+                onMapClick(lat, lng);
+            } else {
+                console.log('النقرة خارج غزة:', lat, lng);
+                onOutsideGazaClick();
+            }
+        },
+        mousemove: (e) => {
+            // console.log('حركة الماوس:', e.latlng);
+        }
+    });
+    
+    return null;
+};
+
+const MapComponent: React.FC<MapComponentProps> = ({ zones, onAction, onAddZone, onShowToast }) => {
     const GAZA_CENTER: [number, number] = [31.5017, 34.4668];
+    const [showReportForm, setShowReportForm] = useState(false);
+    const [clickedCoordinates, setClickedCoordinates] = useState<[number, number] | null>(null);
 
-    //instead of the markers Testttt
-    // const zones: DANGER_ZONE[] = [
-    //     {
-    //         id: '1',
-    //         type: 'bombing',
-    //         coordinates: [31.5017, 34.4668],
-    //         description: 'قصف في المنطقة',
-    //         timestamp: new Date(),
-    //         area: 'غزة',
-    //         verified: false
-    //     },
-    //     {
-    //         id: '2',
-    //         type: 'evacuation_area',
-    //         coordinates: [31.5388, 34.4951],
-    //         description: 'منطقة إخلاء ',
-    //         timestamp: new Date(),
-    //         area: 'شمال غزة',
-    //         verified: true
-    //     },
-    //     {
-    //         id: '3',
-    //         type: 'gunfire',
-    //         coordinates: [31.3505, 34.2936],
-    //         description: 'إطلاق نار متقطع',
-    //         timestamp: new Date(),
-    //         area: 'خان يونس',
-    //         verified: false
-    //     }
-    // ];
+    // استخدام useCallback لتحسين الأداء
+    const handleMapClick = useCallback((lat: number, lng: number) => {
+        console.log('handleMapClick تم استدعاؤها:', lat, lng);
+        setClickedCoordinates([lat, lng]);
+        setShowReportForm(true);
+    }, []);
 
-    // const markers = [{
-    //     geocode: [31.5017, 34.4668],
-    //     popup: "This is a popup!"
-    // }, {
-    //     geocode: [31.5388, 34.4951],
-    //     popup: "This is a popup! 2222"
-    // }, {
-    //     geocode: [31.3505, 34.2936],
-    //     popup: "This is a popup! Saluuut"
-    // }
-    // ]
+    const handleOutsideGazaClick = useCallback(() => {
+        console.log('نقرة خارج غزة');
+        onShowToast(' يجب النقر داخل حدود قطاع غزة فقط', 'error');
+    }, [onShowToast]);
 
+    const handleReportSubmit = useCallback((type: DANGER_ZONE['type'], description: string) => {
+        if (!clickedCoordinates) return;
+
+        const newZone: Omit<DANGER_ZONE, 'id'> = {
+            type,
+            coordinates: clickedCoordinates,
+            radius: DEFAULT_ZONE_RADIUS,
+            description: description || `تم الإبلاغ عن ${REPORT_TYPE_LABELS[type]}`,
+            timestamp: new Date(),
+            reportedAt: new Date(),
+            area: determineAreaName(clickedCoordinates),
+            isVerified: false,
+            verificationsByUsers: [getSessionId()],
+            reportedByUsers: [],
+            endRequests: [],
+            zoneStatus: 'active'
+        };
+
+        onAddZone(newZone);
+        setShowReportForm(false);
+        setClickedCoordinates(null);
+        
+        onShowToast(` تم إضافة ${REPORT_TYPE_LABELS[type]} بنجاح! سيتم عرضها للمراجعة من قبل المجتمع`, 'success');
+    }, [clickedCoordinates, onAddZone, onShowToast]);
+
+    const handleReportClose = useCallback(() => {
+        setShowReportForm(false);
+        setClickedCoordinates(null);
+    }, []);
+
+    // دالة لتحديد اسم المنطقة بناءً على الإحداثيات
+    const determineAreaName = (coordinates: [number, number]): string => {
+        const [lat] = coordinates;
+        
+        if (lat > 31.52) return 'شمال غزة';
+        if (lat > 31.45) return 'غزة';
+        if (lat > 31.35) return 'الوسطى';
+        if (lat > 31.25) return 'خان يونس';
+        return 'رفح';
+    };
 
     const customIcon = (type: string) => {
         const color = DANGER_COLORS[type as keyof typeof DANGER_COLORS];
@@ -78,13 +118,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ zones, onAction }) => {
         });
     };
 
-    // const customIcon = new Icon({
-    //     // iconUrl: "https://cdn-icons-png.flaticon.com/128/1397/1397898.png"
-    //     iconUrl: markerIcon,
-    //     iconSize: [38, 38]
-    // });
-
-    const createCustomClusterIcon = (cluster) => {
+    const createCustomClusterIcon = (cluster: any) => {
         return new DivIcon({
             html: `<div class="salut" >
             <strong>${cluster.getChildCount()}</strong></div>`,
@@ -94,92 +128,143 @@ const MapComponent: React.FC<MapComponentProps> = ({ zones, onAction }) => {
     };
 
     return (
-        <MapContainer center={GAZA_CENTER} zoom={12} style={{ height: "100vh", width: "100%" }}>
-            <TileLayer
-                attribution='<a href="https://wikimediafoundation.org/wiki/Maps_Terms_of_Use">Wikimedia</a>'
-                url="https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png"
-            />
-
-            {zones.map((zone) => (
-                <Circle
-                    key={`circle-${zone.id}`}
-                    center={zone.coordinates}
-                    radius={zone.radius || DEFAULT_ZONE_RADIUS}
-                    pathOptions={{
-                        color: DANGER_COLORS[zone.type],
-                        fillColor: DANGER_COLORS[zone.type],
-                        fillOpacity: 0.2,
-                        weight: 2,
-                    }}
-                />
-            ))}
-
-            <MarkerClusterGroup
-                chunkedLoading
-                iconCreateFunction={createCustomClusterIcon}
+        <>
+            <MapContainer 
+                center={GAZA_CENTER} 
+                zoom={12} 
+                style={{ height: "100vh", width: "100%", cursor: "crosshair" }}
+                zoomControl={true}
+                attributionControl={false}
+                whenCreated={(mapInstance) => {
+                    console.log('تم إنشاء الخريطة:', mapInstance);
+                    // التأكد من أنو الخريطة جاهزة للتفاعل
+                    mapInstance.on('click', (e) => {
+                        console.log('نقرة مباشرة على الخريطة:', e.latlng);
+                    });
+                }}
             >
+                <TileLayer
+                    attribution='<a href="https://wikimediafoundation.org/wiki/Maps_Terms_of_Use">Wikimedia</a>'
+                    url="https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png"
+                />
+                <MapEventHandler 
+                    onMapClick={handleMapClick} 
+                    onOutsideGazaClick={handleOutsideGazaClick}
+                />
                 {zones.map((zone) => (
-                    <Marker
-                        key={zone.id}
-                        position={zone.coordinates}
-                        icon={customIcon(zone.type)}
-                    >
-                        <Popup>
-                            {/* نفس محتوى الـ popup... */}
-                            <div>
-                                <div className="popup-header">
-                                    <h4>{zone.area}</h4>
-                                    {zone.isVerified && <span className="verified-badge"> موثق</span>}
-                                </div>
-
-                                <div className="popup-details">
-                                    <p><strong>النوع:</strong> {zone.type}</p>
-                                    <p><strong>التفاصيل:</strong> {zone.description}</p>
-                                    <div className="time-info">
-                                        {timeAgo(zone.timestamp)}
-                                    </div>
-                                    <p><strong>التوثيقات:</strong> {zone.verificationsByUsers.length}/{REQUIRED_VERIFICATIONS}</p>
-                                </div>
-
-                                <div className="popup-actions">
-                                    <button
-                                        className="popup-btn verify"
-                                        onClick={() => onAction(zone.id, 'document')}
-                                        disabled={!canPerformAction(zone.verificationsByUsers, getSessionId(), 'document').canPerform}
-                                    >
-                                        {ACTION_LABELS.document} ({zone.verificationsByUsers.length}/5)
-                                    </button>
-
-                                    <button
-                                        className="popup-btn report"
-                                        onClick={() => onAction(zone.id, 'report')}
-                                        disabled={!canPerformAction(zone.reportedByUsers, getSessionId(), 'report').canPerform}
-                                    >
-                                        {ACTION_LABELS.report} ({zone.reportedByUsers.length}/5)
-                                    </button>
-
-                                    <button
-                                        className="popup-btn end"
-                                        onClick={() => onAction(zone.id, 'end')}
-                                        disabled={!canPerformAction(zone.endRequests, getSessionId(), 'end').canPerform}
-                                    >
-                                        {ACTION_LABELS.end} ({zone.endRequests.length}/5)
-                                    </button>
-                                </div>
-
-                                <div className="action-descriptions">
-                                    <small>
-                                        <strong>تأكيد:</strong> تأكيد وجود الخطر<br />
-                                        <strong>بلاغ:</strong> معلومات خاطئة (ليس خطر)<br />
-                                        <strong>انتهاء:</strong> الخطر انتهى وأصبح آمن
-                                    </small>
-                                </div>
-                            </div>
-                        </Popup>
-                    </Marker>
+                    <Circle
+                        key={`circle-${zone.id}`}
+                        center={zone.coordinates}
+                        radius={zone.radius || DEFAULT_ZONE_RADIUS}
+                        pathOptions={{
+                            color: DANGER_COLORS[zone.type],
+                            fillColor: DANGER_COLORS[zone.type],
+                            fillOpacity: 0.2,
+                            weight: 2,
+                        }}
+                        // التأكد من أن الدوائر لا تحجب النقر
+                        eventHandlers={{
+                            click: (e) => {
+                                // منع انتشار الحدث إذا تم النقر على الدائرة
+                                e.originalEvent.stopPropagation();
+                            }
+                        }}
+                    />
                 ))}
-            </MarkerClusterGroup>
-        </MapContainer>
+
+                <MarkerClusterGroup
+                    chunkedLoading
+                    iconCreateFunction={createCustomClusterIcon}
+                >
+                    {zones.map((zone) => (
+                        <Marker
+                            key={zone.id}
+                            position={zone.coordinates}
+                            icon={customIcon(zone.type)}
+                            // منع تداخل أحداث النقر مع العلامات
+                            eventHandlers={{
+                                click: (e) => {
+                                    e.originalEvent.stopPropagation();
+                                }
+                            }}
+                        >
+                            <Popup>
+                                <div style={{ direction: 'rtl', fontFamily: 'Cairo, sans-serif' }}>
+                                    <div className="popup-header">
+                                        <h4>{zone.area}</h4>
+                                        {zone.isVerified && (
+                                            <span className="verified-badge">موثق </span>
+                                        )}
+                                    </div>
+
+                                    <div className="popup-details">
+                                        <p><strong>النوع:</strong> {REPORT_TYPE_LABELS[zone.type]}</p>
+                                        <p><strong>التفاصيل:</strong> {zone.description}</p>
+                                        <div className="time-info">
+                                            {timeAgo(zone.timestamp)}
+                                        </div>
+                                        <p>
+                                            <strong>التوثيقات:</strong> 
+                                            <span style={{ 
+                                                color: zone.isVerified ? '#10b981' : '#f59e0b',
+                                                fontWeight: 'bold' 
+                                            }}>
+                                                {zone.verificationsByUsers.length}/{REQUIRED_VERIFICATIONS}
+                                            </span>
+                                        </p>
+                                    </div>
+
+                                    <div className="popup-actions">
+                                        <button
+                                            className="popup-btn verify"
+                                            onClick={() => onAction(zone.id, 'document')}
+                                            disabled={!canPerformAction(zone.verificationsByUsers, getSessionId(), 'document').canPerform}
+                                            title="تأكيد وجود الخطر"
+                                        >
+                                            {ACTION_LABELS.document} ({zone.verificationsByUsers.length})
+                                        </button>
+
+                                        <button
+                                            className="popup-btn report"
+                                            onClick={() => onAction(zone.id, 'report')}
+                                            disabled={!canPerformAction(zone.reportedByUsers, getSessionId(), 'report').canPerform}
+                                            title="الإبلاغ عن معلومات خاطئة"
+                                        >
+                                            {ACTION_LABELS.report} ({zone.reportedByUsers.length})
+                                        </button>
+
+                                        <button
+                                            className="popup-btn end"
+                                            onClick={() => onAction(zone.id, 'end')}
+                                            disabled={!canPerformAction(zone.endRequests, getSessionId(), 'end').canPerform}
+                                            title="تأكيد انتهاء الخطر"
+                                        >
+                                            {ACTION_LABELS.end} ({zone.endRequests.length})
+                                        </button>
+                                    </div>
+
+                                    <div className="action-descriptions">
+                                        <small style={{ color: '#6b7280', lineHeight: '1.4' }}>
+                                            <strong>تأكيد:</strong> تأكيد وجود الخطر<br />
+                                            <strong>بلاغ:</strong> معلومات خاطئة (ليس خطر)<br />
+                                            <strong>انتهاء:</strong> الخطر انتهى وأصبح آمن
+                                        </small>
+                                    </div>
+                                </div>
+                            </Popup>
+                        </Marker>
+                    ))}
+                </MarkerClusterGroup>
+            </MapContainer>
+
+            <ReportForm
+                isOpen={showReportForm}
+                onClose={handleReportClose}
+                onSubmit={handleReportSubmit}
+                coordinates={clickedCoordinates}
+            />
+        </>
     );
 };
+
 export default MapComponent;
