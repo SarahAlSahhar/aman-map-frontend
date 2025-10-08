@@ -487,3 +487,26 @@
 .submit-button:not(:disabled):hover {
   background-color: #059669;
 }
+
+
+
+.leaflet-container {
+    height: 60vh !important;
+    min-height: 450px;
+    max-height: 600px;
+}
+
+.aman-map-app {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.aman-map-app > * {
+    flex-shrink: 0;
+    margin: 0;
+}
+
+.app-footer {
+    margin-top: auto;
+}

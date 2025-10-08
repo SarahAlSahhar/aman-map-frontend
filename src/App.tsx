@@ -1,5 +1,8 @@
 import NavBar from './components/NavBar';
 import MapComponent from './components/MapComponent';
+import AboutModal from './components/AboutModal';
+import AboutSection from './components/AboutSection';
+import Footer from './components/Footer';
 import 'bootstrap/dist/css/bootstrap.css';
 import imagePath from './assets/location-pin.png';
 import './App.css';
@@ -10,7 +13,6 @@ import { getSessionId, generateId } from './utils/index';
 import { canPerformAction } from './utils/verification';
 import Toast from './components/Toast';
 import 'react-toastify/dist/ReactToastify.css';
-
 // Interface للـ toast messages
 interface ToastMessage {
   id: string;
@@ -19,6 +21,9 @@ interface ToastMessage {
 }
 
 function App() {
+  // حالة مودال "عن التطبيق"
+  const [showAboutModal, setShowAboutModal] = useState(false);
+
   // تغيير إلى array بدل object واحد
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
@@ -69,7 +74,7 @@ function App() {
   // دالة إضافة منطقة خطر جديدة
   const handleAddZone = useCallback((newZoneData: Omit<DANGER_ZONE, 'id'>) => {
     const verification = canPerformAction([], getSessionId(), 'add');
-    
+
     if (!verification.canPerform) {
       showToast(verification.reason || 'لا يمكن إضافة منطقة خطر', 'error');
       return;
@@ -92,7 +97,7 @@ function App() {
 
       const verification = canPerformAction(
         actionType === 'document' ? zone.verificationsByUsers :
-        actionType === 'report' ? zone.reportedByUsers : zone.endRequests,
+          actionType === 'report' ? zone.reportedByUsers : zone.endRequests,
         sessionId,
         actionType
       );
@@ -134,24 +139,24 @@ function App() {
     }).filter(zone => zone.zoneStatus !== 'false_report' && zone.zoneStatus !== 'removed'));
   }, []);
 
-  const handleRefresh = () => {
-    showToast('تم تحديث البيانات ', 'info');
-  };
 
-  const handleTogglePanel = () => {
-    showToast('فتح لوحة البيانات ', 'info');
-  };
+  const handleAboutClick = useCallback(() => {
+    setShowAboutModal(true);
+  }, []);
+
+  const handleAboutClose = useCallback(() => {
+    setShowAboutModal(false);
+  }, []);
 
   return (
     <div dir='rtl' className="aman-map-app">
-      <NavBar 
-        logoName='AmanMap' 
+      <NavBar
+        logoName='AmanMap'
         imgSrPath={imagePath}
-        onRefresh={handleRefresh}
-        onTogglePanel={handleTogglePanel} 
+        onAboutClick={handleAboutClick}
       />
-      <MapComponent 
-        zones={zones} 
+      <MapComponent
+        zones={zones}
         onAction={handleAction}
         onAddZone={handleAddZone}
         onShowToast={showToast}
@@ -167,7 +172,15 @@ function App() {
           />
         ))}
       </div>
-        </div>
+
+      <AboutModal
+        isOpen={showAboutModal}
+        onClose={handleAboutClose}
+      />
+
+      <AboutSection />
+      <Footer />
+    </div>
   );
 }
 

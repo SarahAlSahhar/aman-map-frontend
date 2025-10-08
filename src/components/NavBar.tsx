@@ -1,9 +1,10 @@
 interface NavBarProps {
     logoName: string;
     imgSrPath: string;
+    onAboutClick: () => void;
 }
 
-function NavBar({ logoName, imgSrPath }: NavBarProps) {
+function NavBar({ logoName, imgSrPath, onAboutClick }: NavBarProps) {
     return (
         <nav className="navbar custom-navbar navbar-expand-md">
             <div className='container-fluid'>
@@ -16,7 +17,16 @@ function NavBar({ logoName, imgSrPath }: NavBarProps) {
                         alt=""
                     />
                     <span className="fs-4">{logoName}</span>
-                    <a href="#" className="nav-link-about d-none d-md-inline-block">عن التطبيق</a>
+                    <a 
+                        onClick={(e) => {
+                            e.preventDefault();
+                            onAboutClick();
+                        }} 
+                        className="nav-link-about d-none d-md-inline-block" 
+                        style={{ cursor: 'pointer' }}
+                    >
+                        عن التطبيق
+                    </a>
                 </a>
 
                 <button
@@ -33,7 +43,16 @@ function NavBar({ logoName, imgSrPath }: NavBarProps) {
 
                 <div className="collapse navbar-collapse" id="navbarContent">
                     <div className="mobile-menu d-md-none">
-                        <a href="#" className="nav-link-about">عن التطبيق</a>
+                        <a 
+                            onClick={(e) => {
+                                e.preventDefault();
+                                onAboutClick();
+                            }} 
+                            className="nav-link-about"
+                            style={{ cursor: 'pointer' }}
+                        >
+                            عن التطبيق
+                        </a>
                     </div>
                 </div>
             </div>

@@ -97,7 +97,7 @@ const ReportForm: React.FC<ReportFormProps> = ({
                         </div>
                     ))}
                 </div>
-                <div className="textarea-container">
+                {/* <div className="textarea-container">
                     <div className="textarea-label">تفاصيل إضافية (اختياري):</div>
                     <textarea
                         className="textarea"
@@ -108,7 +108,7 @@ const ReportForm: React.FC<ReportFormProps> = ({
                         maxLength={300}
                     />
                     <div className="character-count">{description.length}/300</div>
-                </div>
+                </div> */}
 
                 {/* الأزرار */}
                 <div className="buttons-container">
