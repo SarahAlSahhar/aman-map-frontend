@@ -488,6 +488,146 @@
   background-color: #059669;
 }
 
+/* Radius Slider Styles */
+.radius-container {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #f9fafb;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+}
+
+.radius-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.radius-label {
+  font-weight: bold;
+  color: #4b5563;
+  font-size: 15px;
+}
+
+.radius-value {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  background: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 2px solid #e5e7eb;
+}
+
+.radius-number {
+  font-size: 18px;
+  font-weight: bold;
+  color: #2E4E7A;
+}
+
+.radius-unit {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.radius-slider {
+  width: 100%;
+  height: 8px;
+  border-radius: 5px;
+  outline: none;
+  -webkit-appearance: none;
+  background: #e5e7eb;
+  cursor: pointer;
+  margin: 10px 0;
+}
+
+.radius-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #2E4E7A;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.radius-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+}
+
+.radius-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #2E4E7A;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.radius-slider::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+}
+
+.radius-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 5px;
+  padding: 0 2px;
+}
+
+.radius-info {
+  margin-top: 15px;
+  padding: 12px;
+  background: white;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #4b5563;
+}
+
+.info-icon {
+  font-size: 16px;
+}
+
+.info-text {
+  font-weight: 500;
+}
+
+/* تحسينات للشاشات الصغيرة */
+@media (max-width: 480px) {
+  .radius-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .radius-value {
+    align-self: flex-end;
+  }
+
+  .radius-info {
+    font-size: 13px;
+  }
+}
+
 
 
 .leaflet-container {
@@ -510,3 +650,5 @@
 .app-footer {
     margin-top: auto;
 }
+
+

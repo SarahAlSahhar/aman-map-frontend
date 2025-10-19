@@ -62,13 +62,13 @@ const MapComponent: React.FC<MapComponentProps> = ({ zones, onAction, onAddZone,
         onShowToast(' يجب النقر داخل حدود قطاع غزة فقط', 'error');
     }, [onShowToast]);
 
-    const handleReportSubmit = useCallback((type: DANGER_ZONE['type'], description: string) => {
+    const handleReportSubmit = useCallback((type: DANGER_ZONE['type'], description: string, radius: number) => {
         if (!clickedCoordinates) return;
 
         const newZone: Omit<DANGER_ZONE, 'id'> = {
             type,
             coordinates: clickedCoordinates,
-            radius: DEFAULT_ZONE_RADIUS,
+            radius: radius, // استخدام القيمة المُدخلة من المستخدم
             description: description || `تم الإبلاغ عن ${REPORT_TYPE_LABELS[type]}`,
             timestamp: new Date(),
             reportedAt: new Date(),
@@ -84,7 +84,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ zones, onAction, onAddZone,
         setShowReportForm(false);
         setClickedCoordinates(null);
         
-        onShowToast(` تم إضافة ${REPORT_TYPE_LABELS[type]} بنجاح! سيتم عرضها للمراجعة من قبل المجتمع`, 'success');
+        onShowToast(` تم إضافة ${REPORT_TYPE_LABELS[type]} بنصف قطر ${radius}م بنجاح!`, 'success');
     }, [clickedCoordinates, onAddZone, onShowToast]);
 
     const handleReportClose = useCallback(() => {
@@ -199,6 +199,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ zones, onAction, onAddZone,
 
                                     <div className="popup-details">
                                         <p><strong>النوع:</strong> {REPORT_TYPE_LABELS[zone.type]}</p>
+                                        <p><strong>نصف القطر:</strong> {zone.radius}م</p>
                                         <p><strong>التفاصيل:</strong> {zone.description}</p>
                                         <div className="time-info">
                                             {timeAgo(zone.timestamp)}
@@ -268,3 +269,5 @@ const MapComponent: React.FC<MapComponentProps> = ({ zones, onAction, onAddZone,
 };
 
 export default MapComponent;
+
+

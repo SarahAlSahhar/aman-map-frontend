@@ -5,7 +5,7 @@ import type { DANGER_ZONE } from '../types';
 interface ReportFormProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (type: DANGER_ZONE['type'], description: string) => void;
+    onSubmit: (type: DANGER_ZONE['type'], description: string, radius: number) => void;
     coordinates: [number, number] | null;
 }
 
@@ -17,6 +17,7 @@ const ReportForm: React.FC<ReportFormProps> = ({
 }) => {
     const [selectedType, setSelectedType] = useState<DANGER_ZONE['type'] | null>(null);
     const [description, setDescription] = useState('');
+    const [radius, setRadius] = useState(200); // نصف القطر الافتراضي 200 متر
 
     const dangerTypes: { type: DANGER_ZONE['type']; label: string; color: string }[] =
         Object.entries(REPORT_TYPE_LABELS).map(([type, label]) => ({
@@ -30,9 +31,9 @@ const ReportForm: React.FC<ReportFormProps> = ({
     }, [isOpen, coordinates]);
 
     const handleSubmit = () => {
-        console.log('محاولة إرسال النموذج:', { selectedType, description });
+        console.log('محاولة إرسال النموذج:', { selectedType, description, radius });
         if (selectedType) {
-            onSubmit(selectedType, description.trim());
+            onSubmit(selectedType, description.trim(), radius);
             resetForm();
         } else {
             console.log('النموذج غير مكتمل');
@@ -42,12 +43,26 @@ const ReportForm: React.FC<ReportFormProps> = ({
     const resetForm = () => {
         setSelectedType(null);
         setDescription('');
+        setRadius(200);
     };
 
     const handleClose = () => {
         console.log('إغلاق المودال');
         resetForm();
         onClose();
+    };
+
+    // حساب مساحة الدائرة بالمتر المربع
+    const calculateArea = (r: number) => {
+        return Math.PI * r * r;
+    };
+
+    // تنسيق المساحة للعرض
+    const formatArea = (area: number) => {
+        if (area >= 1000000) {
+            return `${(area / 1000000).toFixed(2)} كم²`;
+        }
+        return `${Math.round(area)} م²`;
     };
 
     console.log('ReportForm - سيتم الرندر:', { isOpen });
@@ -63,7 +78,6 @@ const ReportForm: React.FC<ReportFormProps> = ({
         <div className="modal-container" onClick={handleClose}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header">
-                    {/*  لازم أضيف icon هنا لبعدين  */}
                     <h3>تحديد منطقة خطر </h3>
                 </div>
 
@@ -97,18 +111,48 @@ const ReportForm: React.FC<ReportFormProps> = ({
                         </div>
                     ))}
                 </div>
-                {/* <div className="textarea-container">
-                    <div className="textarea-label">تفاصيل إضافية (اختياري):</div>
-                    <textarea
-                        className="textarea"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        placeholder="اكتب أي تفاصيل إضافية..."
-                        rows={2}
-                        maxLength={300}
+
+                {/* تحديد نصف القطر */}
+                <div className="radius-container">
+                    <div className="radius-header">
+                        <div className="radius-label">تحديد مساحة المنطقة:</div>
+                        <div className="radius-value">
+                            <span className="radius-number">{radius}</span>
+                            <span className="radius-unit">متر</span>
+                        </div>
+                    </div>
+
+                    <input
+                        type="range"
+                        min="50"
+                        max="1000"
+                        step="50"
+                        value={radius}
+                        onChange={(e) => setRadius(Number(e.target.value))}
+                        className="radius-slider"
+                        style={{
+                            background: selectedType 
+                                ? `linear-gradient(to left, ${DANGER_COLORS[selectedType]} 0%, ${DANGER_COLORS[selectedType]} ${(radius - 50) / 950 * 100}%, #e5e7eb ${(radius - 50) / 950 * 100}%, #e5e7eb 100%)`
+                                : undefined
+                        }}
                     />
-                    <div className="character-count">{description.length}/300</div>
-                </div> */}
+
+                    <div className="radius-labels">
+                        <span>50م</span>
+                        <span>1000م</span>
+                    </div>
+
+                    <div className="radius-info">
+                        <div className="info-item">
+                            <span className="info-icon">📏</span>
+                            <span className="info-text">نصف القطر: {radius} متر</span>
+                        </div>
+                        <div className="info-item">
+                            <span className="info-icon">📐</span>
+                            <span className="info-text">المساحة: {formatArea(calculateArea(radius))}</span>
+                        </div>
+                    </div>
+                </div>
 
                 {/* الأزرار */}
                 <div className="buttons-container">
