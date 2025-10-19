@@ -8,8 +8,9 @@ import { ACTION_LABELS, REQUIRED_VERIFICATIONS, DEFAULT_ZONE_RADIUS } from "../t
 import { getSessionId } from "../utils";
 import { canPerformAction } from "../utils/verification";
 import { timeAgo } from "../utils";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import ReportForm from "./ReportForm";
+import MapLoadingSkeleton from "./MapLoadingSkeleton";
 
 
 interface MapComponentProps {
@@ -37,9 +38,6 @@ const MapEventHandler = ({ onMapClick, onOutsideGazaClick }: {
                 onOutsideGazaClick();
             }
         },
-        mousemove: (e) => {
-            // console.log('حركة الماوس:', e.latlng);
-        }
     });
     
     return null;
@@ -49,6 +47,18 @@ const MapComponent: React.FC<MapComponentProps> = ({ zones, onAction, onAddZone,
     const GAZA_CENTER: [number, number] = [31.5017, 34.4668];
     const [showReportForm, setShowReportForm] = useState(false);
     const [clickedCoordinates, setClickedCoordinates] = useState<[number, number] | null>(null);
+    
+    // Loading state - بسيط وفعال
+    const [isMapLoading, setIsMapLoading] = useState(true);
+
+    // إخفاء الـ skeleton بعد وقت قصير
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setIsMapLoading(false);
+        }, 1000); // ثانية واحدة فقط
+
+        return () => clearTimeout(timer);
+    }, []);
 
     // استخدام useCallback لتحسين الأداء
     const handleMapClick = useCallback((lat: number, lng: number) => {
@@ -68,7 +78,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ zones, onAction, onAddZone,
         const newZone: Omit<DANGER_ZONE, 'id'> = {
             type,
             coordinates: clickedCoordinates,
-            radius: radius, // استخدام القيمة المُدخلة من المستخدم
+            radius: radius,
             description: description || `تم الإبلاغ عن ${REPORT_TYPE_LABELS[type]}`,
             timestamp: new Date(),
             reportedAt: new Date(),
@@ -127,6 +137,11 @@ const MapComponent: React.FC<MapComponentProps> = ({ zones, onAction, onAddZone,
         });
     };
 
+    // Show skeleton while loading
+    if (isMapLoading) {
+        return <MapLoadingSkeleton />;
+    }
+
     return (
         <>
             <MapContainer 
@@ -135,13 +150,6 @@ const MapComponent: React.FC<MapComponentProps> = ({ zones, onAction, onAddZone,
                 style={{ height: "100vh", width: "100%", cursor: "crosshair" }}
                 zoomControl={true}
                 attributionControl={false}
-                whenCreated={(mapInstance) => {
-                    console.log('تم إنشاء الخريطة:', mapInstance);
-                    // التأكد من أنو الخريطة جاهزة للتفاعل
-                    mapInstance.on('click', (e) => {
-                        console.log('نقرة مباشرة على الخريطة:', e.latlng);
-                    });
-                }}
             >
                 <TileLayer
                     attribution='<a href="https://wikimediafoundation.org/wiki/Maps_Terms_of_Use">Wikimedia</a>'
@@ -162,10 +170,8 @@ const MapComponent: React.FC<MapComponentProps> = ({ zones, onAction, onAddZone,
                             fillOpacity: 0.2,
                             weight: 2,
                         }}
-                        // التأكد من أن الدوائر لا تحجب النقر
                         eventHandlers={{
                             click: (e) => {
-                                // منع انتشار الحدث إذا تم النقر على الدائرة
                                 e.originalEvent.stopPropagation();
                             }
                         }}
@@ -181,7 +187,6 @@ const MapComponent: React.FC<MapComponentProps> = ({ zones, onAction, onAddZone,
                             key={zone.id}
                             position={zone.coordinates}
                             icon={customIcon(zone.type)}
-                            // منع تداخل أحداث النقر مع العلامات
                             eventHandlers={{
                                 click: (e) => {
                                     e.originalEvent.stopPropagation();
@@ -269,5 +274,3 @@ const MapComponent: React.FC<MapComponentProps> = ({ zones, onAction, onAddZone,
 };
 
 export default MapComponent;
-
-
